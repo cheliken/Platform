@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GioBio</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, 'Segoe UI', sans-serif; }
+        body { background: #f0f7f0; padding: 20px; }
+        .container { max-width: 1300px; margin: 0 auto; }
+        .header { background: #2d6a4f; color: white; padding: 20px; border-radius: 28px; margin-bottom: 30px; text-align: center; }
+        .header h1 { font-size: 2rem; margin-bottom: 8px; }
+        .tabs { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 30px; border-bottom: 2px solid #b7e4c7; padding-bottom: 10px; }
+        .tab-btn { background: #e9f5ef; border: none; padding: 10px 24px; border-radius: 40px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .tab-btn.active { background: #2d6a4f; color: white; }
+        .tab-content { display: none; animation: fade 0.3s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+        .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; margin-top: 20px; }
+        .card { background: white; border-radius: 24px; padding: 18px; box-shadow: 0 6px 14px rgba(0,0,0,0.05); border: 1px solid #d8f0e2; }
+        .card h3 { color: #1b4d3e; margin-bottom: 12px; }
+        .badge { display: inline-block; background: #e0f2e9; padding: 4px 12px; border-radius: 30px; font-size: 0.8rem; font-weight: bold; margin-bottom: 12px; }
+        .price { font-weight: bold; color: #2c6e49; margin: 12px 0; font-size: 1.2rem; }
+        .file-info { background: #e8f0fe; padding: 5px 10px; border-radius: 20px; font-size: 0.75rem; display: inline-block; margin-bottom: 8px; }
+        .btn { background: #2d6a4f; color: white; border: none; padding: 8px 16px; border-radius: 40px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        .btn-outline { background: white; border: 1px solid #2d6a4f; color: #2d6a4f; }
+        .btn-outline:hover { background: #2d6a4f; color: white; }
+        .btn-danger { background: #bc4742; }
+        .admin-panel { background: #fefae0; border-radius: 28px; padding: 20px; margin-top: 20px; border: 2px solid #e9c46a; }
+        input, textarea, select { width: 100%; padding: 10px; margin: 8px 0 16px; border: 1px solid #ccc; border-radius: 20px; }
+        input[type="file"] { padding: 8px; background: white; }
+        .quiz-question { background: #f9f9f9; padding: 15px; border-radius: 20px; margin-bottom: 20px; }
+        .quiz-option { margin: 8px 0; display: flex; align-items: center; gap: 8px; }
+        .result-area { background: #e6f4ea; padding: 16px; border-radius: 20px; margin-top: 20px; }
+        .task-item { background: #fff3cd; padding: 15px; border-radius: 20px; margin-bottom: 12px; }
+        footer { text-align: center; margin-top: 40px; padding: 20px; color: #5e7c6c; }
+        .video-preview { margin: 10px 0; border-radius: 12px; overflow: hidden; }
+        video { width: 100%; max-height: 160px; border-radius: 12px; background: #000; }
+        .sber-badge { background: #00a35f; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; display: inline-block; margin-bottom: 8px; }
+        .payment-modal { background: white; padding: 20px; border-radius: 24px; margin-top: 15px; border: 2px solid #2d6a4f; }
+        .transaction-input { margin: 10px 0; }
+        .small-text { font-size: 0.75rem; color: #666; margin-top: 5px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🌿 GeoBio Портфолио</h1>
+        <p>Проекты по географии и биологии | Тесты и задачи | Платная подписка</p>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="student">📚 Ученик (тесты/задачи)</button>
+        <button class="tab-btn" data-tab="teacher">👩‍🏫 Учитель (купить проекты)</button>
+        <button class="tab-btn" data-tab="admin">🔐 Админ-панель</button>
+    </div>
+
+    <div id="student" class="tab-content active">
+        <h2>📖 Тесты и задачи</h2>
+        <div id="quizSection"></div>
+        <div id="tasksSection"></div>
+        <div id="studentResult" class="result-area" style="display:none;"></div>
+    </div>
+
+    <div id="teacher" class="tab-content">
+        <h2>📥 Платные проекты</h2>
+        <div style="background: #e8f5e9; padding: 15px; border-radius: 20px; margin-bottom: 20px;">
+            💳 <strong>Реквизиты для оплаты (Сбербанк):</strong><br>
+            📱 Номер карты/телефона: <strong>+7 906 102-94-63</strong><br>
+            💰 Сумма: <strong>150 ₽</strong> за один проект<br>
+            📌 <strong>Важно:</strong> после перевода скопируйте <strong>НОМЕР ТРАНЗАКЦИИ (ID платежа)</strong> из чека в приложении Сбера и введите его на сайте.
+        </div>
+        <div id="projectsForTeacher" class="projects-grid"></div>
+        <div id="paymentMessage" style="margin-top: 15px;"></div>
+    </div>
+
+    <div id="admin" class="tab-content">
+        <div class="admin-panel">
+            <h2>🔧 Администратор</h2>
+            <input type="password" id="adminPass" placeholder="Пароль" style="max-width: 300px;">
+            <button id="unlockAdmin" class="btn" style="width: auto;">Войти</button>
+            <div id="adminContent" style="display:none; margin-top: 25px;">
+                <hr>
+                <h3>➕ Добавить проект (любой файл: PDF, ZIP, видео)</h3>
+                <input type="text" id="projTitle" placeholder="Название проекта">
+                <textarea id="projDesc" rows="2" placeholder="Описание"></textarea>
+                <select id="projSubject">
+                    <option value="География">🌍 География</option>
+                    <option value="Биология">🧬 Биология</option>
+                </select>
+                <input type="number" id="projPrice" value="150" placeholder="Цена">
+                <div style="background: #e9f5ef; border-radius: 20px; padding: 12px; margin: 8px 0;">
+                    <label>📎 Файл проекта (можно видео, документ, архив):</label>
+                    <input type="file" id="projFile">
+                </div>
+                <button id="addProjectBtn" class="btn">➕ Опубликовать</button>
+
+                <h3 style="margin-top: 30px;">📝 Тесты</h3>
+                <div id="adminQuizList"></div>
+                <button id="addQuizBtn" class="btn-outline btn">➕ Добавить тест</button>
+                <div id="newQuizForm" style="display:none; margin-top: 15px; background: white; padding: 15px; border-radius: 20px;">
+                    <input type="text" id="quizQuestion" placeholder="Вопрос">
+                    <input type="text" id="quizOpt1" placeholder="Вариант 1">
+                    <input type="text" id="quizOpt2" placeholder="Вариант 2">
+                    <input type="text" id="quizOpt3" placeholder="Вариант 3">
+                    <input type="text" id="quizOpt4" placeholder="Вариант 4">
+                    <input type="number" id="quizCorrect" placeholder="Правильный ответ (1-4)">
+                    <button id="saveQuizBtn" class="btn">Сохранить</button>
+                </div>
+
+                <h3 style="margin-top: 30px;">📌 Задачи</h3>
+                <div id="adminTasksList"></div>
+                <div style="display: flex; gap: 12px;">
+                    <input type="text" id="newTaskText" placeholder="Новая задача" style="flex:1">
+                    <button id="addTaskBtn" class="btn" style="width: auto;">➕</button>
+                </div>
+                <button id="clearAllData" class="btn-danger btn" style="margin-top: 25px;">⚠ Сбросить всё</button>
+            </div>
+        </div>
+    </div>
+    <footer>© GeoBio Портфолио — оплата на Сбер +7 906 102-94-63 с проверкой номера транзакции</footer>
+</div>
+
+<script>
+    let projects = [];
+    let quizzes = [];
+    let tasks = [];
+    const PHONE = "+79061029463";
+    const SBER_PAY_LINK = "https://pay.sber.ru/79061029463";
+
+    // Хранилище подтверждённых транзакций (в реальном проекте - база данных)
+    let verifiedTransactions = JSON.parse(localStorage.getItem("verified_transactions") || "{}");
+
+    function saveVerifiedTransactions() {
+        localStorage.setItem("verified_transactions", JSON.stringify(verifiedTransactions));
+    }
+
+    function loadData() {
+        const storedProjects = localStorage.getItem("portfolio_projects");
+        projects = storedProjects ? JSON.parse(storedProjects) : [];
+        const storedQuizzes = localStorage.getItem("portfolio_quizzes");
+        quizzes = storedQuizzes ? JSON.parse(storedQuizzes) : [
+            { id: 101, question: "Какая самая длинная река в мире?", options: ["Нил", "Амазонка", "Янцзы", "Миссисипи"], correct: 1 },
+            { id: 102, question: "Что такое фотосинтез?", options: ["Дыхание растений", "Процесс образования органических веществ", "Деление клетки", "Испарение воды"], correct: 2 }
+        ];
+        const storedTasks = localStorage.getItem("portfolio_tasks");
+        tasks = storedTasks ? JSON.parse(storedTasks) : [
+            { id: 201, text: "Нарисуйте схему круговорота воды" },
+            { id: 202, text: "Подготовьте сообщение о редких растениях" }
+        ];
+    }
+
+    function saveAll() {
+        localStorage.setItem("portfolio_projects", JSON.stringify(projects));
+        localStorage.setItem("portfolio_quizzes", JSON.stringify(quizzes));
+        localStorage.setItem("portfolio_tasks", JSON.stringify(tasks));
+    }
+
+    function formatFileSize(bytes) {
+        if (!bytes) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function isVideo(fileName, mimeType) {
+        const videoExt = ['.mp4', '.webm', '.mov', '.avi', '.mkv'];
+        const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+        return videoExt.includes(ext) || (mimeType && mimeType.startsWith('video/'));
+    }
+
+    function downloadFile(fileData, fileName, fileType) {
+        const byteChars = atob(fileData.split(',')[1]);
+        const byteNumbers = new Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+        const blob = new Blob([new Uint8Array(byteNumbers)], { type: fileType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function renderStudentPanel() {
+        const quizDiv = document.getElementById("quizSection");
+        let quizHtml = `<h3>📋 Тесты</h3>`;
+        quizzes.forEach((q, idx) => {
+            quizHtml += `<div class="quiz-question">
+                            <strong>${idx+1}. ${q.question}</strong>
+                            <div>`;
+            q.options.forEach((opt, optIdx) => {
+                quizHtml += `<label class="quiz-option"><input type="radio" name="quiz_${q.id}" value="${optIdx+1}"> ${opt}</label>`;
+            });
+            quizHtml += `</div></div>`;
+        });
+        quizHtml += `<button id="submitQuizBtn" class="btn">✅ Проверить</button>`;
+        quizDiv.innerHTML = quizHtml;
+
+        const tasksDiv = document.getElementById("tasksSection");
+        let tasksHtml = `<h3>✍️ Задачи</h3>`;
+        tasks.forEach(t => { tasksHtml += `<div class="task-item">📌 ${t.text}</div>`; });
+        tasksDiv.innerHTML = tasksHtml;
+
+        document.getElementById("submitQuizBtn")?.addEventListener("click", () => {
+            let score = 0, results = [];
+            quizzes.forEach(q => {
+                const selected = document.querySelector(`input[name="quiz_${q.id}"]:checked`);
+                if (selected && parseInt(selected.value) === q.correct) { score++; results.push(`✅ ${q.question}`); }
+                else { results.push(`❌ ${q.question}`); }
+            });
+            const resDiv = document.getElementById("studentResult");
+            resDiv.style.display = "block";
+            resDiv.innerHTML = `<strong>Результат: ${score} из ${quizzes.length}</strong><br>${results.join('<br>')}`;
+        });
+    }
+
+    function renderTeacherProjects() {
+        const container = document.getElementById("projectsForTeacher");
+        if (!container) return;
+        if (projects.length === 0) {
+            container.innerHTML = "<p>Нет проектов. Админ ещё не загрузил материалы.</p>";
+            return;
+        }
+        let html = "";
+        projects.forEach(proj => {
+            const isVideoFile = isVideo(proj.fileName, proj.fileType);
+            html += `<div class="card" data-id="${proj.id}">
+                        <span class="badge">${proj.subject}</span>
+                        <h3>${proj.title}</h3>
+                        <p>${proj.desc}</p>`;
+            if (isVideoFile && proj.fileData) {
+                html += `<div class="video-preview"><video controls src="${proj.fileData}"></video></div>`;
+            }
+            html += `<div class="file-info">📎 ${proj.fileName} (${formatFileSize(proj.fileSize)})</div>
+                        <div class="price">💰 ${proj.price} ₽</div>
+                        <button class="btn pay-btn" data-id="${proj.id}" data-price="${proj.price}" data-title="${proj.title.replace(/"/g, '&quot;')}">
+                            💳 Оплатить ${proj.price}₽ через Сбер
+                        </button>
+                    </div>`;
+        });
+        container.innerHTML = html;
+
+        document.querySelectorAll(".pay-btn").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const projectId = parseInt(btn.dataset.id);
+                const project = projects.find(p => p.id === projectId);
+                if (!project) return;
+
+                // Показываем форму для ввода номера транзакции
+                const messageDiv = document.getElementById("paymentMessage");
+                messageDiv.innerHTML = `
+                    <div class="payment-modal">
+                        <strong>📌 Шаг 1: Оплатите ${project.price}₽ на номер ${PHONE}</strong><br>
+                        <a href="https://online.sberbank.ru/CSAFront/index.do" target="_blank" class="btn" style="display: inline-block; width: auto; margin: 10px 0;">🔗 Открыть СберБанк Онлайн</a>
+                        <div class="transaction-input">
+                            <label>📋 Шаг 2: Введите НОМЕР ТРАНЗАКЦИИ (ID платежа) из чека Сбера:</label>
+                            <input type="text" id="transactionId" placeholder="Например: 1234567890" style="margin-top: 5px;">
+                            <div class="small-text">ℹ️ Номер транзакции можно найти в истории операций или в SMS/чеке от Сбера</div>
+                        </div>
+                        <button id="confirmPaymentBtn" class="btn" data-id="${projectId}">✅ Подтвердить оплату и скачать</button>
+                        <button id="cancelPaymentBtn" class="btn-outline btn" style="margin-top: 5px;">❌ Отмена</button>
+                    </div>
+                `;
+
+                document.getElementById("confirmPaymentBtn")?.addEventListener("click", () => {
+                    const transId = document.getElementById("transactionId").value.trim();
+                    if (!transId) {
+                        alert("Введите номер транзакции из чека Сбербанка!");
+                        return;
+                    }
+                    // Проверяем, не использовалась ли уже эта транзакция
+                    if (verifiedTransactions[transId]) {
+                        alert(`Транзакция ${transId} уже была использована для скачивания. Если вы не скачивали, свяжитесь с администратором.`);
+                        return;
+                    }
+                    // Сохраняем транзакцию как подтверждённую
+                    verifiedTransactions[transId] = {
+                        projectId: project.id,
+                        projectTitle: project.title,
+                        date: new Date().toISOString(),
+                        amount: project.price
+                    };
+                    saveVerifiedTransactions();
+                    
+                    // Скачиваем файл
+                    if (project.fileData) {
+                        downloadFile(project.fileData, project.fileName, project.fileType);
+                        messageDiv.innerHTML = `<div style="background: #d4edda; padding: 15px; border-radius: 20px;">
+                            ✅ Оплата подтверждена! Файл "${project.fileName}" начал скачивание.<br>
+                            📋 Номер транзакции ${transId} сохранён.
+                        </div>`;
+                    } else {
+                        messageDiv.innerHTML = `<div style="background: #f8d7da; padding: 15px; border-radius: 20px;">❌ Ошибка: файл проекта не найден.</div>`;
+                    }
+                    setTimeout(() => { if(messageDiv) messageDiv.innerHTML = ""; }, 5000);
+                });
+
+                document.getElementById("cancelPaymentBtn")?.addEventListener("click", () => {
+                    messageDiv.innerHTML = "";
+                });
+            });
+        });
+    }
+
+    function renderAdmin(adminUnlocked) {
+        if (!adminUnlocked) return;
+        const adminQuizDiv = document.getElementById("adminQuizList");
+        let quizHtml = `<ul style="list-style:none;">`;
+        quizzes.forEach((q, idx) => {
+            quizHtml += `<li style="background:#fff; margin:8px 0; padding:8px; border-radius:16px;">
+                            ${idx+1}. ${q.question} 
+                            <button class="btn-outline btn" style="width:auto;" data-delquiz="${q.id}">Удалить</button>
+                         </li>`;
+        });
+        quizHtml += `</ul>`;
+        adminQuizDiv.innerHTML = quizHtml;
+        document.querySelectorAll("[data-delquiz]").forEach(btn => {
+            btn.addEventListener("click", () => {
+                quizzes = quizzes.filter(q => q.id !== parseInt(btn.dataset.delquiz));
+                saveAll();
+                renderAdmin(true);
+                renderStudentPanel();
+            });
+        });
+
+        const adminTasksDiv = document.getElementById("adminTasksList");
+        let tasksHtml = ``;
+        tasks.forEach(t => {
+            tasksHtml += `<div style="background:#fef9e6; margin:8px 0; padding:8px; border-radius:16px; display:flex; justify-content:space-between;">
+                            📌 ${t.text}
+                            <button class="btn-outline btn" style="width:auto;" data-deltask="${t.id}">Удалить</button>
+                         </div>`;
+        });
+        adminTasksDiv.innerHTML = tasksHtml;
+        document.querySelectorAll("[data-deltask]").forEach(btn => {
+            btn.addEventListener("click", () => {
+                tasks = tasks.filter(t => t.id !== parseInt(btn.dataset.deltask));
+                saveAll();
+                renderAdmin(true);
+                renderStudentPanel();
+            });
+        });
+
+        // Показываем список подтверждённых транзакций для админа
+        const transDiv = document.createElement("div");
+        transDiv.style.marginTop = "30px";
+        transDiv.style.background = "#e9ecef";
+        transDiv.style.padding = "15px";
+        transDiv.style.borderRadius = "20px";
+        let transHtml = `<h3>📋 Подтверждённые транзакции (оплаты)</h3>`;
+        if (Object.keys(verifiedTransactions).length === 0) {
+            transHtml += `<p>Нет подтверждённых оплат.</p>`;
+        } else {
+            transHtml += `<table style="width:100%; border-collapse: collapse; font-size: 0.8rem;">
+                            <tr style="background:#2d6a4f; color:white;"><th>ID транзакции</th><th>Проект</th><th>Сумма</th><th>Дата</th></tr>`;
+            for (const [transId, data] of Object.entries(verifiedTransactions)) {
+                transHtml += `<tr style="border-bottom:1px solid #ccc;"><td>${transId}</td><td>${data.projectTitle}</td><td>${data.amount}₽</td><td>${new Date(data.date).toLocaleString()}</td></tr>`;
+            }
+            transHtml += `</table><button id="clearTransactionsBtn" class="btn-danger btn" style="margin-top:10px;">🗑 Очистить историю транзакций</button>`;
+        }
+        transDiv.innerHTML = transHtml;
+        const existingTrans = document.getElementById("transactionsPanel");
+        if (existingTrans) existingTrans.remove();
+        transDiv.id = "transactionsPanel";
+        document.getElementById("adminContent").appendChild(transDiv);
+        document.getElementById("clearTransactionsBtn")?.addEventListener("click", () => {
+            if (confirm("Удалить всю историю подтверждённых транзакций?")) {
+                verifiedTransactions = {};
+                saveVerifiedTransactions();
+                renderAdmin(true);
+            }
+        });
+    }
+
+    function initAdminEvents() {
+        document.getElementById("addProjectBtn")?.addEventListener("click", () => {
+            const title = document.getElementById("projTitle").value.trim();
+            const desc = document.getElementById("projDesc").value.trim();
+            const subject = document.getElementById("projSubject").value;
+            const price = parseInt(document.getElementById("projPrice").value);
+            const fileInput = document.getElementById("projFile");
+            if (!title || !desc) { alert("Заполните название и описание"); return; }
+            if (!fileInput.files.length) { alert("Выберите файл"); return; }
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                projects.push({
+                    id: Date.now(),
+                    title, desc, subject, price: price || 150,
+                    fileName: file.name, fileType: file.type, fileSize: file.size,
+                    fileData: e.target.result
+                });
+                saveAll();
+                renderTeacherProjects();
+                alert(`Проект "${title}" добавлен`);
+                document.getElementById("projTitle").value = "";
+                document.getElementById("projDesc").value = "";
+                document.getElementById("projFile").value = "";
+            };
+            reader.readAsDataURL(file);
+        });
+
+        let quizFormVisible = false;
+        document.getElementById("addQuizBtn")?.addEventListener("click", () => {
+            const form = document.getElementById("newQuizForm");
+            quizFormVisible = !quizFormVisible;
+            form.style.display = quizFormVisible ? "block" : "none";
+        });
+        document.getElementById("saveQuizBtn")?.addEventListener("click", () => {
+            const q = document.getElementById("quizQuestion").value.trim();
+            const o1 = document.getElementById("quizOpt1").value.trim();
+            const o2 = document.getElementById("quizOpt2").value.trim();
+            const o3 = document.getElementById("quizOpt3").value.trim();
+            const o4 = document.getElementById("quizOpt4").value.trim();
+            const correct = parseInt(document.getElementById("quizCorrect").value);
+            if (!q || !o1 || !o2 || !o3 || !o4 || correct < 1 || correct > 4) { alert("Заполните все поля"); return; }
+            quizzes.push({ id: Date.now(), question: q, options: [o1, o2, o3, o4], correct });
+            saveAll();
+            renderAdmin(true);
+            renderStudentPanel();
+            document.getElementById("newQuizForm").style.display = "none";
+            quizFormVisible = false;
+        });
+
+        document.getElementById("addTaskBtn")?.addEventListener("click", () => {
+            const text = document.getElementById("newTaskText").value.trim();
+            if (!text) { alert("Введите текст задачи"); return; }
+            tasks.push({ id: Date.now(), text });
+            saveAll();
+            renderAdmin(true);
+            renderStudentPanel();
+            document.getElementById("newTaskText").value = "";
+        });
+
+        document.getElementById("clearAllData")?.addEventListener("click", () => {
+            if (confirm("Сбросить ВСЕ данные (проекты, тесты, задачи)?")) {
+                projects = [];
+                quizzes = [];
+                tasks = [];
+                saveAll();
+                loadData();
+                renderTeacherProjects();
+                renderStudentPanel();
+                renderAdmin(true);
+                alert("Сброшено");
+            }
+        });
+    }
+
+    function setupTabsAndAdmin() {
+        document.querySelectorAll(".tab-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const tabId = btn.dataset.tab;
+                document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
+                document.getElementById(tabId).classList.add("active");
+                document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                if (tabId === "teacher") renderTeacherProjects();
+                if (tabId === "student") renderStudentPanel();
+            });
+        });
+
+        let adminUnlocked = false;
+        document.getElementById("unlockAdmin")?.addEventListener("click", () => {
+            const pass = document.getElementById("adminPass").value;
+            if (pass === "2023056") {
+                adminUnlocked = true;
+                document.getElementById("adminContent").style.display = "block";
+                renderAdmin(true);
+                initAdminEvents();
+                alert("Доступ разрешён");
+            } else {
+                alert("Неверный пароль");
+                document.getElementById("adminContent").style.display = "none";
+            }
+        });
+    }
+
+    function init() {
+        loadData();
+        renderStudentPanel();
+        renderTeacherProjects();
+        setupTabsAndAdmin();
+    }
+    init();
+</script>
+</body>
+</html>
